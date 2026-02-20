@@ -28,4 +28,4 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/MLops:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/mlops:latest
