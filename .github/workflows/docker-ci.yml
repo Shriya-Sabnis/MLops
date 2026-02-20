@@ -28,4 +28,4 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/quantum-shield-api:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/MLops:latest
