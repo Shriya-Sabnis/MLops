@@ -13,6 +13,7 @@ from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from fastapi import Depends, Security, HTTPException
 from fastapi.security import APIKeyHeader
+from fastapi.middleware.cors import CORSMiddleware
 
 
 # Configure application logger
@@ -41,7 +42,15 @@ console_handler.setFormatter(log_formatter)
 logger.addHandler(console_handler)
 
 
-app = FastAPI(title="🚀 Cyber Intrusion API", version="1.0.0")
+app = FastAPI(title="Cyber Intrusion API", version="1.0.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
 API_KEY = "supersecretkey123"
 API_KEY_NAME = "X-API-Key"
 
