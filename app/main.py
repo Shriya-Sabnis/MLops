@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse
 from fastapi import Depends, Security, HTTPException
 from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
-
+from prometheus_fastapi_instrumentator import Instrumentator
 
 # Configure application logger
 logger = logging.getLogger("cyber_scaler")
@@ -50,7 +50,7 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
-
+Instrumentator().instrument(app).expose(app)
 API_KEY = "supersecretkey123"
 API_KEY_NAME = "X-API-Key"
 
