@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Shield | Intrusion Hunter</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --bg-color: #050505; --panel-bg: #111; --primary: #00ff41; --danger: #ff003c; --text-main: #e0e0e0; }
+        body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Courier New', Courier, monospace; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        h1 { color: var(--primary); text-transform: uppercase; text-shadow: 0 0 10px rgba(0, 255, 65, 0.5); text-align: center; }
+        
+        .dashboard { display: flex; gap: 20px; width: 100%; max-width: 1200px; flex-wrap: wrap; margin-bottom: 20px; align-items: flex-start; }
+        
+        .panel { background: var(--panel-bg); border: 1px solid #333; border-top: 3px solid var(--primary); padding: 20px; border-radius: 5px; flex: 1; min-width: 320px; box-sizing: border-box; }
+        .panel-full { width: 100%; max-width: 1200px; margin-bottom: 40px; }
+        h2 { border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 0; }
+        
+        .form-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .form-group { flex: 1; }
+        label { display: block; margin-bottom: 5px; font-size: 0.9rem; }
+        input, select { width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: var(--primary); font-family: inherit; box-sizing: border-box; }
+        
+        button { width: 100%; padding: 12px; background: var(--primary); color: #000; border: none; font-weight: bold; font-family: inherit; cursor: pointer; text-transform: uppercase; margin-bottom: 10px; transition: 0.2s; }
+        button:hover { background: #00cc33; box-shadow: 0 0 10px rgba(0, 255, 65, 0.4); }
+        
+        #result-box { margin-top: 20px; padding: 15px; border: 1px dashed #444; text-align: center; font-size: 1.2rem; font-weight: bold; display: none; }
+        .safe { color: var(--primary); border-color: var(--primary) !important; }
+        .breach { color: var(--danger); border-color: var(--danger) !important; }
+        
+        .chart-wrapper { position: relative; width: 100%; height: 300px; display: flex; justify-content: center; align-items: center; }
+        .bar-wrapper { position: relative; width: 100%; height: 250px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
+        th, td { border: 1px solid #444; padding: 10px; text-align: left; }
+        th { background-color: #222; color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <h1>Quantum Shield Dashboard</h1>
+
+    <!-- EXPT 10: Real-time user input -->
+    <div class="dashboard">
+        <div class="panel">
+            <h2>Live Session Analysis (Expt 10)</h2>
+            <form id="predictForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Packet Size (bytes):</label>
+                        <input type="number" id="network_packet_size" value="1500" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Protocol Type:</label>
+                        <select id="protocol_type">
+                            <option value="TCP">TCP</option>
+                            <option value="UDP">UDP</option>
+                            <option value="ICMP">ICMP</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Login Attempts:</label>
+                        <input type="number" id="login_attempts" value="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Failed Logins:</label>
+                        <input type="number" id="failed_logins" value="0" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Session Duration (s):</label>
+                        <input type="number" step="0.1" id="session_duration" value="60.0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Browser Type:</label>
+                        <select id="browser_type">
+                            <option value="Chrome">Chrome</option>
+                            <option value="Firefox">Firefox</option>
+                            <option value="Safari">Safari</option>
+                            <option value="Unknown">Unknown</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>IP Reputation (0-10):</label>
+                        <input type="number" step="0.1" id="ip_reputation_score" value="7.5" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Unusual Time Access:</label>
+                        <select id="unusual_time_access">
+                            <option value="0">0 - Normal</option>
+                            <option value="1">1 - Unusual</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit">Analyze Live Traffic</button>
+            </form>
+            <div id="result-box"></div>
+        </div>
+        
+        <div class="panel">
+            <h2>Live Threat Probability</h2>
+            <div class="chart-wrapper">
+                <canvas id="riskChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXPT 9: Visualize predictions using test data (Charts & Tables) -->
+    <div class="panel panel-full">
+        <h2>Batch Test Data Visualization (Expt 9)</h2>
+        <p style="font-size: 0.9rem; color: #aaa;">This sends 5 pre-configured test sessions to the EC2 backend simultaneously to demonstrate model batch processing.</p>
+        <button id="runBatchBtn" style="width: auto; padding: 10px 20px;">Run Batch Test (5 Samples)</button>
+        
+        <div class="dashboard" style="margin-top: 20px; margin-bottom: 0; gap: 40px;">
+            <div style="flex: 1; min-width: 300px;">
+                <table id="batchTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>IP Score</th>
+                            <th>Failed Logins</th>
+                            <th>Status</th>
+                            <th>Attack Prob (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="batchTableBody">
+                        <tr><td colspan="5">Click button above to run test data through API...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="flex: 1; min-width: 300px;">
+                <div class="bar-wrapper">
+                    <canvas id="batchBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Use your actual EC2 public IP here
+        const API_URL = "/api/predict"; 
+        const API_KEY = "supersecretkey123";
+
+        // --- Live Chart (Expt 10) ---
+        const ctxLive = document.getElementById('riskChart').getContext('2d');
+        let riskChart = new Chart(ctxLive, { 
+            type: 'doughnut', 
+            data: { 
+                labels: ['Safe', 'Attack'], 
+                datasets: [{ data: [50, 50], backgroundColor: ['#00ff41', '#222'], borderWidth: 0 }] 
+            }, 
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { labels: { color: '#e0e0e0' } } }
+            }
+        });
+
+        document.getElementById('predictForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Gather all inputs
+            const payload = {
+                network_packet_size: parseFloat(document.getElementById('network_packet_size').value),
+                protocol_type: document.getElementById('protocol_type').value,
+                login_attempts: parseInt(document.getElementById('login_attempts').value),
+                session_duration: parseFloat(document.getElementById('session_duration').value),
+                failed_logins: parseInt(document.getElementById('failed_logins').value),
+                unusual_time_access: parseInt(document.getElementById('unusual_time_access').value),
+                ip_reputation_score: parseFloat(document.getElementById('ip_reputation_score').value),
+                browser_type: document.getElementById('browser_type').value
+            };
+
+            const box = document.getElementById('result-box');
+            box.style.display = 'block';
+            box.innerHTML = 'Analyzing...';
+            box.className = '';
+
+            try {
+                const res = await fetch(API_URL, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY }, 
+                    body: JSON.stringify(payload) 
+                });
+                const data = await res.json();
+                
+                const prob = (data.attack_probability * 100).toFixed(1);
+                box.innerHTML = `Result: ${data.message} <br> Prob: ${prob}%`;
+                box.className = data.is_attack ? 'breach' : 'safe';
+
+                riskChart.data.datasets[0].data = [100 - prob, prob];
+                riskChart.data.datasets[0].backgroundColor = data.is_attack ? ['#222', '#ff003c'] : ['#00ff41', '#222'];
+                riskChart.update();
+            } catch (err) {
+                box.innerHTML = "Error connecting to backend.";
+                box.className = 'breach';
+            }
+        });
+
+        // --- Batch Data Visualizations (Expt 9) ---
+        const ctxBatch = document.getElementById('batchBarChart').getContext('2d');
+        let batchChart = new Chart(ctxBatch, {
+            type: 'bar',
+            data: { labels: [], datasets: [{ label: 'Attack Probability (%)', data: [], backgroundColor: '#00ff41' }] },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                scales: { 
+                    y: { beginAtZero: true, max: 100, grid: { color: '#333' }, ticks: { color: '#e0e0e0' } }, 
+                    x: { grid: { color: '#333' }, ticks: { color: '#e0e0e0' } } 
+                }, 
+                plugins: { legend: { labels: { color: '#e0e0e0' } } } 
+            }
+        });
+
+        const testData = [
+            { id: "User 1", failed_logins: 0, ip_reputation_score: 9.5, unusual_time_access: 0 }, 
+            { id: "User 2", failed_logins: 5, ip_reputation_score: 4.2, unusual_time_access: 1 }, 
+            { id: "User 3", failed_logins: 0, ip_reputation_score: 8.0, unusual_time_access: 0 }, 
+            { id: "Hacker 1", failed_logins: 15, ip_reputation_score: 1.1, unusual_time_access: 1 }, 
+            { id: "User 4", failed_logins: 2, ip_reputation_score: 6.5, unusual_time_access: 0 }  
+        ];
+
+        document.getElementById('runBatchBtn').addEventListener('click', async () => {
+            const tbody = document.getElementById('batchTableBody');
+            tbody.innerHTML = '<tr><td colspan="5">Processing batch...</td></tr>';
+            
+            let labels = [];
+            let chartData = [];
+            let bgColors = [];
+            let tableRows = '';
+
+            for (let item of testData) {
+                const payload = {
+                    network_packet_size: 1500, protocol_type: "TCP", login_attempts: 1, session_duration: 60.0,
+                    failed_logins: item.failed_logins, unusual_time_access: item.unusual_time_access,
+                    ip_reputation_score: item.ip_reputation_score, browser_type: "Chrome"
+                };
+
+                try {
+                    const res = await fetch(API_URL, { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY }, 
+                        body: JSON.stringify(payload) 
+                    });
+                    const data = await res.json();
+                    const prob = (data.attack_probability * 100).toFixed(1);
+
+                    const statusClass = data.is_attack ? 'breach' : 'safe';
+                    tableRows += `<tr><td>${item.id}</td><td>${item.ip_reputation_score}</td><td>${item.failed_logins}</td><td class="${statusClass}">${data.confidence}</td><td>${prob}%</td></tr>`;
+                    
+                    labels.push(item.id);
+                    chartData.push(prob);
+                    bgColors.push(data.is_attack ? '#ff003c' : '#00ff41');
+                } catch(e) {
+                    console.error("API failed for " + item.id);
+                }
+            }
+
+            tbody.innerHTML = tableRows;
+            batchChart.data.labels = labels;
+            batchChart.data.datasets[0].data = chartData;
+            batchChart.data.datasets[0].backgroundColor = bgColors;
+            batchChart.update();
+        });
+    </script>
+</body>
+</html>
